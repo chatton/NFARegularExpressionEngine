@@ -7,30 +7,30 @@ func infixToPostfix(infix string) string {
 
 	specials := map[rune]int{'*': 10, '.': 9, '|': 8}
 	postfix := stack.New()
-	stack := stack.New()
+	tempStack := stack.New()
 
 	for _, r := range infix {
 		switch {
 		case r == '(':
-			stack.Push(r)
+			tempStack.Push(r)
 		case r == ')':
-			for stack.Peek() != '(' {
-				postfix.Push(stack.Pop())
+			for tempStack.Peek() != '(' {
+				postfix.Push(tempStack.Pop())
 			}
-			stack.Pop()
+			tempStack.Pop()
 
 		case specials[r] > 0:
-			for !stack.IsEmpty() && specials[r] <= specials[stack.Peek()] {
-				postfix.Push(stack.Pop())
+			for !tempStack.IsEmpty() && specials[r] <= specials[tempStack.Peek()] {
+				postfix.Push(tempStack.Pop())
 			}
-			stack.Push(r)
+			tempStack.Push(r)
 		default:
 			postfix.Push(r)
 		}
 	}
 
-	for !stack.IsEmpty() {
-		postfix.Push(stack.Pop())
+	for !tempStack.IsEmpty() {
+		postfix.Push(tempStack.Pop())
 	}
 
 	result := postfix.Data()

@@ -6,9 +6,8 @@ import (
 )
 
 func main() {
-	regex := "a.b.(c|d).u*"
-	postfix := nfa.InfixToPostfix(regex)
-	fmt.Println(postfix)
-	n := nfa.PostFixToNfa(postfix)
-	fmt.Println(n)
+	n := nfa.Compile("b.(c+).(e?)")
+
+	fmt.Println(n.Matches("bccccccc"))
+
 }

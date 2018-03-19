@@ -5,8 +5,22 @@ import (
 	"strings"
 )
 
-type Nfa struct {
+type nfa struct {
 	Initial, Accept *State
+	postfix         string
+}
+
+// provide mechanism for creating compiled Nfas so you don't need to construct the nfa each time you use it.
+func Compile(infix string) *nfa {
+	postfix := InfixToPostfix(infix)
+	n := postFixToNfa(postfix)
+	n.postfix = postfix
+	return n
+}
+
+// use the saved nfa to match the provided string
+func (n *nfa) Matches(matchString string) bool {
+	return postfixMatch(n.postfix, matchString)
 }
 
 type State struct {
@@ -14,23 +28,23 @@ type State struct {
 	edge1, edge2 *State
 }
 
-func PostFixToNfa(postfix string) *Nfa {
+func postFixToNfa(postfix string) *nfa {
 
 	nfaStack := stack.New()
 	for _, r := range postfix {
 		switch r {
 		case '.':
 			// take 2 elements off the stack
-			frag2 := nfaStack.Pop().(*Nfa)
-			frag1 := nfaStack.Pop().(*Nfa)
+			frag2 := nfaStack.Pop().(*nfa)
+			frag1 := nfaStack.Pop().(*nfa)
 			// join them together
 			frag1.Accept.edge1 = frag2.Initial
 			// place the single fragment on top of the stack
-			nfaStack.Push(&Nfa{Initial: frag1.Initial, Accept: frag2.Accept})
+			nfaStack.Push(&nfa{Initial: frag1.Initial, Accept: frag2.Accept})
 		case '|':
 			// take 2 elements off the stack
-			frag2 := nfaStack.Pop().(*Nfa)
-			frag1 := nfaStack.Pop().(*Nfa)
+			frag2 := nfaStack.Pop().(*nfa)
+			frag1 := nfaStack.Pop().(*nfa)
 			// create a new initial state which points at both fragments
 			initial := State{edge1: frag1.Initial, edge2: frag2.Initial}
 			accept := State{}
@@ -39,10 +53,10 @@ func PostFixToNfa(postfix string) *Nfa {
 			frag2.Accept.edge1 = &accept
 
 			// add the new fragment to the stack.
-			nfaStack.Push(&Nfa{Initial: &initial, Accept: &accept})
+			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
 		case '*':
 			// take a single element off of the stack
-			frag := nfaStack.Pop().(*Nfa)
+			frag := nfaStack.Pop().(*nfa)
 			accept := State{}
 			// create and edge pointing back at itself and one towards the new accept state
 			initial := State{edge1: frag.Initial, edge2: &accept}
@@ -51,34 +65,35 @@ func PostFixToNfa(postfix string) *Nfa {
 			// the second edge loops around
 			frag.Accept.edge2 = &accept
 			// add it to the stack
-			nfaStack.Push(&Nfa{Initial: &initial, Accept: &accept})
+			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
 		case '+':
 			// take a single element off of the stack
-			frag := nfaStack.Pop().(*Nfa)
+			frag := nfaStack.Pop().(*nfa)
 			accept := State{}
 			initial := State{edge1: frag.Initial, edge2: &accept}
 
 			frag.Accept.edge1 = &initial
+			frag.Accept.edge2 = nil
 
-			nfaStack.Push(&Nfa{Initial: &initial, Accept: &accept})
+			nfaStack.Push(&nfa{Initial: frag.Initial, Accept: &accept})
 		case '?':
 			// take a single element off of the stack
-			frag := nfaStack.Pop().(*Nfa)
+			frag := nfaStack.Pop().(*nfa)
 			// create a new state that points to the existing item and also the accept state
 			initial := State{edge1: frag.Initial, edge2: frag.Accept}
 			// push the new Nfa onto the stack
-			nfaStack.Push(&Nfa{Initial: &initial, Accept: frag.Accept})
+			nfaStack.Push(&nfa{Initial: &initial, Accept: frag.Accept})
 		default:
 			accept := State{}
 			initial := State{symbol: r, edge1: &accept}
-			nfaStack.Push(&Nfa{Initial: &initial, Accept: &accept})
+			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
 		}
 	}
 
 	if nfaStack.Len() != 1 {
 		panic("Nfa stack didn't have just a single element in it.")
 	}
-	res := nfaStack.Pop().(*Nfa)
+	res := nfaStack.Pop().(*nfa)
 	return res
 }
 
@@ -88,7 +103,7 @@ func IsEmpty(s *stack.Stack) bool {
 
 func InfixToPostfix(infix string) string {
 
-	specials := map[string]int{"*": 10, ".": 9, "|": 8, "?": 7}
+	specials := map[string]int{"*": 10, ".": 9, "+": 8, "|": 7, "?": 6}
 
 	postfix := stack.New()
 	tempStack := stack.New()
@@ -152,7 +167,6 @@ func addState(possibilities []*State, from, to *State) []*State {
 				states.Push(next.edge2)
 			}
 		}
-
 	}
 
 	return possibilities
@@ -169,8 +183,8 @@ func addState(possibilities []*State, from, to *State) []*State {
 //	return states
 //}
 
-func PostfixMatch(postfix, matchString string) bool {
-	nfa := PostFixToNfa(postfix)
+func postfixMatch(postfix, matchString string) bool {
+	nfa := postFixToNfa(postfix)
 
 	var current []*State
 	current = addState(current, nfa.Initial, nfa.Accept)
@@ -183,7 +197,6 @@ func PostfixMatch(postfix, matchString string) bool {
 			}
 		}
 		current, next = next, []*State{}
-
 	}
 
 	for _, curr := range current {

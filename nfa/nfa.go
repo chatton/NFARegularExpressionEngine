@@ -3,6 +3,7 @@ package nfa
 import (
 	"github.com/golang-collections/collections/stack" // useful stack data structure
 	"strings"
+	"unicode"
 )
 
 type nfa struct {
@@ -19,13 +20,53 @@ func Compile(infix string) *nfa {
 }
 
 // use the saved nfa to match the provided string
-func (n *nfa) Matches(matchString string) bool {
-	return postfixMatch(n.postfix, matchString)
-}
+//func (n *nfa) Matches(matchString string) bool {
+//	return postfixMatch(n.postfix, matchString)
+//}
 
 type State struct {
-	symbol       rune
+	symbol       interface{}
 	edge1, edge2 *State
+}
+
+type Token interface {
+	Matches(r rune) bool
+}
+
+type CharacterClassToken struct {
+	val string
+}
+
+//func (t *CharacterClassToken) Val() string {
+//	return t.val
+//}
+
+// example every character in the character class
+// if the rune in question matches any of them
+// it is a match
+func (t *CharacterClassToken) Matches(r rune) bool {
+	for _, char := range t.val {
+		if r == char {
+			return true
+		}
+	}
+	return false
+}
+
+type WordToken struct {
+	val string
+}
+
+func (t *WordToken) Matches(r rune) bool {
+	return unicode.IsLetter(r)
+}
+
+type DigitToken struct {
+	val string
+}
+
+func (t *DigitToken) Matches(r rune) bool {
+	return unicode.IsDigit(r)
 }
 
 func postFixToNfa(postfix string) *nfa {
@@ -85,7 +126,7 @@ func postFixToNfa(postfix string) *nfa {
 			nfaStack.Push(&nfa{Initial: &initial, Accept: frag.Accept})
 		default:
 			accept := State{}
-			initial := State{symbol: r, edge1: &accept}
+			initial := State{symbol: CharacterClassToken{string(r)}, edge1: &accept}
 			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
 		}
 	}
@@ -99,6 +140,55 @@ func postFixToNfa(postfix string) *nfa {
 
 func IsEmpty(s *stack.Stack) bool {
 	return s.Len() == 0
+}
+
+func Tokenize(infix string) []interface{} {
+
+	var tokens []interface{}
+
+	var s string
+	var escapeStr string
+	appendToS := false
+	wantsToEscape := false
+	for _, r := range infix { // handle character classes
+
+		if wantsToEscape { // second backslash in a row, escape the character
+
+			escapeStr += string(r)
+			wantsToEscape = false
+			switch r {
+			case 'd': // \d
+				tokens = append(tokens, DigitToken{val: string(r)})
+			case 'w': // \w
+				tokens = append(tokens, WordToken{val: string(r)})
+			case '\\': // a second backslash
+				tokens = append(tokens, CharacterClassToken{val: string(r)})
+			}
+			continue
+		}
+		if r == '\\' { // potentially want to escape a character
+			wantsToEscape = true
+			escapeStr = ""
+			continue
+		}
+
+		// don't want to append the last element in a token
+		if appendToS && r != ']' {
+			s += string(r) // add as a single character of a multi character token
+		} else if r != '[' && r != ']' { // add the single character as a token
+			tokens = append(tokens, CharacterClassToken{string(r)})
+		}
+
+		if r == '[' { // we're going to start a multi character token
+			appendToS = true
+		} else if r == ']' { // reached end of character class
+			tokens = append(tokens, CharacterClassToken{s}) // add the full string as a single token
+			s = ""
+			appendToS = false // stop building up character class
+		}
+	}
+
+	return tokens
 }
 
 func InfixToPostfix(infix string) string {
@@ -117,7 +207,6 @@ func InfixToPostfix(infix string) string {
 				postfix.Push(tempStack.Pop())
 			}
 			tempStack.Pop()
-
 		case specials[string(r)] > 0:
 			for !IsEmpty(tempStack) && specials[string(r)] <= specials[tempStack.Peek().(string)] {
 				postfix.Push(tempStack.Pop())
@@ -143,34 +232,34 @@ func InfixToPostfix(infix string) string {
 
 // returns all the possible states from the given state, including
 // state transitions with e arrows
-func addState(possibilities []*State, from, to *State) []*State {
-	seen := make(map[*State]bool) // keep track of the states we've already visited
-
-	states := stack.New()
-	states.Push(from)
-
-	for !IsEmpty(states) { // keep looking until dead end
-		next := states.Pop().(*State)
-
-		if seen[next] { // we may be looking at a state we've already seen
-			continue
-		}
-
-		// mark the state as having been seen already so we don't examine it again.
-		seen[next] = true
-		possibilities = append(possibilities, next) // this is a valid destination
-
-		// e arrow if symbol == 0
-		if next != to && next.symbol == 0 {
-			states.Push(next.edge1)
-			if next.edge2 != nil {
-				states.Push(next.edge2)
-			}
-		}
-	}
-
-	return possibilities
-}
+//func addState(possibilities []*State, from, to *State) []*State {
+//	seen := make(map[*State]bool) // keep track of the states we've already visited
+//
+//	states := stack.New()
+//	states.Push(from)
+//
+//	for !IsEmpty(states) { // keep looking until dead end
+//		next := states.Pop().(*State)
+//
+//		if seen[next] { // we may be looking at a state we've already seen
+//			continue
+//		}
+//
+//		// mark the state as having been seen already so we don't examine it again.
+//		seen[next] = true
+//		possibilities = append(possibilities, next) // this is a valid destination
+//
+//		// e arrow if symbol == 0
+//		if next != to && next.symbol == 0 {
+//			states.Push(next.edge1)
+//			if next.edge2 != nil {
+//				states.Push(next.edge2)
+//			}
+//		}
+//	}
+//
+//	return possibilities
+//}
 
 //func addState(states []*State, start, accept *State) []*State {
 //	states = append(states, start)
@@ -182,28 +271,28 @@ func addState(possibilities []*State, from, to *State) []*State {
 //	}
 //	return states
 //}
-
-func postfixMatch(postfix, matchString string) bool {
-	nfa := postFixToNfa(postfix)
-
-	var current []*State
-	current = addState(current, nfa.Initial, nfa.Accept)
-	var next []*State
-
-	for _, r := range matchString {
-		for _, curr := range current {
-			if curr.symbol == r {
-				next = addState(next[:], curr.edge1, nfa.Accept)
-			}
-		}
-		current, next = next, []*State{}
-	}
-
-	for _, curr := range current {
-		if curr == nfa.Accept {
-			return true
-		}
-	}
-
-	return false
-}
+//
+//func postfixMatch(postfix, matchString string) bool {
+//	nfa := postFixToNfa(postfix)
+//
+//	var current []*State
+//	current = addState(current, nfa.Initial, nfa.Accept)
+//	var next []*State
+//
+//	for _, r := range matchString {
+//		for _, curr := range current {
+//			if curr.symbol == r {
+//				next = addState(next[:], curr.edge1, nfa.Accept)
+//			}
+//		}
+//		current, next = next, []*State{}
+//	}
+//
+//	for _, curr := range current {
+//		if curr == nfa.Accept {
+//			return true
+//		}
+//	}
+//
+//	return false
+//}

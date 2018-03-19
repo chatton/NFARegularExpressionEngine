@@ -2,10 +2,11 @@ package main
 
 import (
 	"../nfa"
-	"fmt"
+	//"fmt"
 )
 
 func main() {
-	n := nfa.Compile("b.(c+).(e?)")
-	fmt.Println(n.Matches("bccccccc"))
+	//n := nfa.Compile("b.(c+).(e?)")
+	//fmt.Println(n.Matches("bccccccc"))
+	nfa.Tokenize(`a[bc]\de`)
 }

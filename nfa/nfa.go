@@ -53,7 +53,21 @@ func PostFixToNfa(postfix string) *Nfa {
 			// add it to the stack
 			nfaStack.Push(&Nfa{Initial: &initial, Accept: &accept})
 		case '+':
-			fallthrough
+			// take a single element off of the stack
+			frag := nfaStack.Pop().(*Nfa)
+			accept := State{}
+			initial := State{edge1: frag.Initial, edge2: &accept}
+
+			frag.Accept.edge1 = &initial
+
+			nfaStack.Push(&Nfa{Initial: &initial, Accept: &accept})
+		case '?':
+			// take a single element off of the stack
+			frag := nfaStack.Pop().(*Nfa)
+			// create a new state that points to the existing item and also the accept state
+			initial := State{edge1: frag.Initial, edge2: frag.Accept}
+			// push the new Nfa onto the stack
+			nfaStack.Push(&Nfa{Initial: &initial, Accept: frag.Accept})
 		default:
 			accept := State{}
 			initial := State{symbol: r, edge1: &accept}
@@ -74,7 +88,7 @@ func IsEmpty(s *stack.Stack) bool {
 
 func InfixToPostfix(infix string) string {
 
-	specials := map[string]int{"*": 10, ".": 9, "|": 8}
+	specials := map[string]int{"*": 10, ".": 9, "|": 8, "?": 7}
 
 	postfix := stack.New()
 	tempStack := stack.New()
@@ -114,48 +128,46 @@ func InfixToPostfix(infix string) string {
 
 // returns all the possible states from the given state, including
 // state transitions with e arrows
-//func getAllPossibleStates(from, to *State) []*State {
-//	seen := make(map[*State]bool) // keep track of the states we've already visited
-//
-//	states := stack.New()
-//	states.Push(from)
-//
-//	var possibilities []*State
-//
-//	for !IsEmpty(states) { // keep looking until dead end
-//		next := states.Pop().(*State)
-//
-//		if seen[next] { // we may be looking at a state we've already seen
-//			continue
-//		}
-//
-//		// mark the state as having been seen already so we don't examine it again.
-//		seen[next] = true
-//		possibilities = append(possibilities, next) // this is a valid destination
-//
-//		// e arrow if symbol == 0
-//		if next != to && next.symbol == 0 {
-//			states.Push(next.edge1)
-//			if next.edge2 != nil {
-//				states.Push(next.edge2)
-//			}
-//		}
-//
-//	}
-//	fmt.Println(len(possibilities))
-//	return possibilities
-//}
+func addState(possibilities []*State, from, to *State) []*State {
+	seen := make(map[*State]bool) // keep track of the states we've already visited
 
-func addState(states []*State, start, accept *State) []*State {
-	states = append(states, start)
-	if start != accept && start.symbol == 0 {
-		states = addState(states, start.edge1, accept)
-		if start.edge2 != nil {
-			states = addState(states, start.edge2, accept)
+	states := stack.New()
+	states.Push(from)
+
+	for !IsEmpty(states) { // keep looking until dead end
+		next := states.Pop().(*State)
+
+		if seen[next] { // we may be looking at a state we've already seen
+			continue
 		}
+
+		// mark the state as having been seen already so we don't examine it again.
+		seen[next] = true
+		possibilities = append(possibilities, next) // this is a valid destination
+
+		// e arrow if symbol == 0
+		if next != to && next.symbol == 0 {
+			states.Push(next.edge1)
+			if next.edge2 != nil {
+				states.Push(next.edge2)
+			}
+		}
+
 	}
-	return states
+
+	return possibilities
 }
+
+//func addState(states []*State, start, accept *State) []*State {
+//	states = append(states, start)
+//	if start != accept && start.symbol == 0 {
+//		states = addState(states, start.edge1, accept)
+//		if start.edge2 != nil {
+//			states = addState(states, start.edge2, accept)
+//		}
+//	}
+//	return states
+//}
 
 func PostfixMatch(postfix, matchString string) bool {
 	nfa := PostFixToNfa(postfix)

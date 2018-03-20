@@ -1,7 +1,8 @@
 package nfa
 
 import (
-	"github.com/golang-collections/collections/stack" // useful stack data structure
+	"github.com/golang-collections/collections/set"   // used to keep track of seen states
+	"github.com/golang-collections/collections/stack" // useful stack data structure used throughout the code
 )
 
 type nfa struct {
@@ -107,7 +108,7 @@ func Tokenize(infix string) []interface{} {
 				tokens = append(tokens, DigitToken{val: `\d`})
 			case 'w': // \w
 				tokens = append(tokens, WordToken{val: `\w`})
-			default:
+			default: // it's an escaped character
 				tokens = append(tokens, CharacterClassToken{val: string(r)})
 			}
 			continue
@@ -186,20 +187,20 @@ func InfixToPostfix(infix string) []Token {
 //returns all the possible states from the given state, including
 //state transitions with e arrows
 func addState(possibilities []*State, from, to *State) []*State {
-	seen := make(map[*State]bool) // keep track of the states we've already visited
-
+	seen := set.New() // keep track of the states we've already visited
 	states := stack.New()
 	states.Push(from)
 
 	for !IsEmpty(states) { // keep looking until dead end
 		next := states.Pop().(*State)
 
-		if seen[next] { // we may be looking at a state we've already seen
+		if seen.Has(next) { // we may be looking at a state we've already seen
 			continue
 		}
 
 		// mark the state as having been seen already so we don't examine it again.
-		seen[next] = true
+		seen.Insert(next)
+
 		possibilities = append(possibilities, next) // this is a valid destination
 
 		// e arrow if symbol == nil

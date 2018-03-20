@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	n := nfa.Compile("[def]")
-	fmt.Println(n.Matches("d"))
+	n := nfa.Compile("\\w+.\\d+")
+	fmt.Println(n.Matches("hello"))
 }

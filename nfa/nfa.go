@@ -52,6 +52,10 @@ type WordToken struct {
 	val string
 }
 
+func (t WordToken) Val() string {
+	return t.val
+}
+
 func (t WordToken) Matches(r rune) bool {
 	return unicode.IsLetter(r)
 }
@@ -112,7 +116,6 @@ func tokensToNfa(tokens []Token) *nfa {
 			initial := State{edge1: frag.Initial, edge2: &accept}
 
 			frag.Accept.edge1 = &initial
-			frag.Accept.edge2 = nil
 
 			nfaStack.Push(&nfa{Initial: frag.Initial, Accept: &accept})
 		case "?":
@@ -125,7 +128,6 @@ func tokensToNfa(tokens []Token) *nfa {
 		default:
 			accept := State{}
 			initial := State{edge1: &accept, symbol: tok}
-
 			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
 
 		}
@@ -133,84 +135,6 @@ func tokensToNfa(tokens []Token) *nfa {
 
 	return nfaStack.Pop().(*nfa)
 }
-
-//func postFixToNfa(postfix string) *nfa {
-//
-//	nfaStack := stack.New()
-//	for _, r := range postfix {
-//		switch r {
-//		case '.':
-//			// take 2 elements off the stack
-//			frag2 := nfaStack.Pop().(*nfa)
-//			frag1 := nfaStack.Pop().(*nfa)
-//			// join them together
-//			frag1.Accept.edge1 = frag2.Initial
-//			// place the single fragment on top of the stack
-//			nfaStack.Push(&nfa{Initial: frag1.Initial, Accept: frag2.Accept})
-//		case '|':
-//			// take 2 elements off the stack
-//			frag2 := nfaStack.Pop().(*nfa)
-//			frag1 := nfaStack.Pop().(*nfa)
-//			// create a new initial state which points at both fragments
-//			initial := State{edge1: frag1.Initial, edge2: frag2.Initial}
-//			accept := State{}
-//			// point both fragments at the new accept state
-//			frag1.Accept.edge1 = &accept
-//			frag2.Accept.edge1 = &accept
-//
-//			// add the new fragment to the stack.
-//			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
-//		case '*':
-//			// take a single element off of the stack
-//			frag := nfaStack.Pop().(*nfa)
-//			accept := State{}
-//			// create and edge pointing back at itself and one towards the new accept state
-//			initial := State{edge1: frag.Initial, edge2: &accept}
-//			// the accept state points back at the initial state
-//			frag.Accept.edge1 = frag.Initial
-//			// the second edge loops around
-//			frag.Accept.edge2 = &accept
-//			// add it to the stack
-//			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
-//		case '+':
-//			// take a single element off of the stack
-//			frag := nfaStack.Pop().(*nfa)
-//			accept := State{}
-//			initial := State{edge1: frag.Initial, edge2: &accept}
-//
-//			frag.Accept.edge1 = &initial
-//			frag.Accept.edge2 = nil
-//
-//			nfaStack.Push(&nfa{Initial: frag.Initial, Accept: &accept})
-//		case '?':
-//			// take a single element off of the stack
-//			frag := nfaStack.Pop().(*nfa)
-//			// create a new state that points to the existing item and also the accept state
-//			initial := State{edge1: frag.Initial, edge2: frag.Accept}
-//			// push the new Nfa onto the stack
-//			nfaStack.Push(&nfa{Initial: &initial, Accept: frag.Accept})
-//		default:
-//			accept := State{}
-//			initial := State{edge1: &accept}
-//			switch r {
-//			case 'd':
-//				initial.symbol = DigitToken{string(r)}
-//			case 'w':
-//				initial.symbol = WordToken{string(r)}
-//			default:
-//				initial.symbol = CharacterClassToken{string(r)}
-//			}
-//
-//			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
-//		}
-//	}
-//
-//	if nfaStack.Len() != 1 {
-//		panic("Nfa stack didn't have just a single element in it.")
-//	}
-//	res := nfaStack.Pop().(*nfa)
-//	return res
-//}
 
 func IsEmpty(s *stack.Stack) bool {
 	return s.Len() == 0
@@ -349,7 +273,8 @@ func (n *nfa) Matches(matchString string) bool {
 
 	for _, r := range matchString {
 		for _, curr := range current {
-			if curr.symbol != nil && curr.symbol.(Token).Val() == string(r) {
+			// each token type implements the logic to match the specific character
+			if curr.symbol != nil && curr.symbol.(Token).Matches(r) {
 				next = addState(next[:], curr.edge1, n.Accept)
 			}
 		}

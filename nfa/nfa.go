@@ -98,7 +98,7 @@ func Tokenize(infix string) []interface{} {
 	var escapeStr string
 	appendToS := false
 	wantsToEscape := false
-	for _, r := range infix {
+	for i, r := range infix {
 
 		if wantsToEscape { // there was a backslash escape the character
 			escapeStr += string(r)
@@ -111,6 +111,7 @@ func Tokenize(infix string) []interface{} {
 			default: // it's an escaped character
 				tokens = append(tokens, CharacterClassToken{val: string(r)})
 			}
+
 			continue
 		}
 
@@ -127,14 +128,40 @@ func Tokenize(infix string) []interface{} {
 			s += string(r) // add as a single character of a multi character token
 		} else if !startingClass && !endingClass { // add the single character as a token
 			tokens = append(tokens, CharacterClassToken{string(r)})
+			atEnd := i == len(infix)-1
+			if !atEnd {
+				switch infix[i+1] {
+				case '+':
+				case '?':
+				case '*':
+				case '|':
+				//case '(':
+				case ')':
+				case ']':
+				default:
+					if r != '(' && r != '|' && r != '[' {
+						tokens = append(tokens, CharacterClassToken{"."})
+					}
+				}
+			}
 		}
 
 		if startingClass { // we're going to start a multi character token
 			appendToS = true
 		} else if endingClass { // reached end of character class
 			tokens = append(tokens, CharacterClassToken{s}) // add the full string as a single token
+
+			atEnd := i == len(infix)-1
+			if !atEnd {
+				next := infix[i+1]
+				if next != '+' && next != '|' && next != '*' {
+					tokens = append(tokens, CharacterClassToken{"."})
+				}
+			}
+
 			s = ""
 			appendToS = false // stop building up character class
+
 		}
 	}
 
@@ -143,7 +170,7 @@ func Tokenize(infix string) []interface{} {
 
 func InfixToPostfix(infix string) []Token {
 
-	specials := map[string]int{ /*"^": 12, "$": 11,*/ "*": 10, "+": 9, "|": 5, "?": 6, ".": 8}
+	specials := map[string]int{ /*"^": 12, "$": 11,*/ "*": 10, "+": 9, "|": 5, "?": 8, ".": 6}
 
 	postfix := stack.New()
 	tempStack := stack.New()

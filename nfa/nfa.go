@@ -30,6 +30,7 @@ type State struct {
 }
 
 type Token interface {
+	Val() string
 	Matches(r rune) bool
 }
 
@@ -37,14 +38,14 @@ type CharacterClassToken struct {
 	val string
 }
 
-//func (t *CharacterClassToken) Val() string {
-//	return t.val
-//}
+func (t CharacterClassToken) Val() string {
+	return t.val
+}
 
 // example every character in the character class
 // if the rune in question matches any of them
 // it is a match
-func (t *CharacterClassToken) Matches(r rune) bool {
+func (t CharacterClassToken) Matches(r rune) bool {
 	for _, char := range t.val {
 		if r == char {
 			return true
@@ -57,7 +58,7 @@ type WordToken struct {
 	val string
 }
 
-func (t *WordToken) Matches(r rune) bool {
+func (t WordToken) Matches(r rune) bool {
 	return unicode.IsLetter(r)
 }
 
@@ -65,8 +66,12 @@ type DigitToken struct {
 	val string
 }
 
-func (t *DigitToken) Matches(r rune) bool {
+func (t DigitToken) Matches(r rune) bool {
 	return unicode.IsDigit(r)
+}
+
+func (t DigitToken) Val() string {
+	return t.val
 }
 
 func postFixToNfa(postfix string) *nfa {
@@ -199,22 +204,25 @@ func InfixToPostfix(infix string) string {
 	postfix := stack.New()
 	tempStack := stack.New()
 
-	for _, r := range infix {
+	tokens := Tokenize(infix)
+	for _, tok := range tokens {
+		val := tok.(Token).Val()
+
 		switch {
-		case r == '(':
-			tempStack.Push(string(r))
-		case r == ')':
-			for tempStack.Peek() != "(" {
+		case val == "(":
+			tempStack.Push(tok)
+		case val == ")":
+			for tempStack.Peek().(Token).Val() != "(" {
 				postfix.Push(tempStack.Pop())
 			}
 			tempStack.Pop()
-		case specials[string(r)] > 0:
-			for !IsEmpty(tempStack) && specials[string(r)] <= specials[tempStack.Peek().(string)] {
+		case specials[val] > 0:
+			for !IsEmpty(tempStack) && specials[val] <= specials[tempStack.Peek().(Token).Val()] {
 				postfix.Push(tempStack.Pop())
 			}
-			tempStack.Push(string(r))
+			tempStack.Push(tok)
 		default:
-			postfix.Push(string(r))
+			postfix.Push(tok)
 		}
 	}
 
@@ -222,13 +230,25 @@ func InfixToPostfix(infix string) string {
 		postfix.Push(tempStack.Pop())
 	}
 
-	// return the elements as a more generic slice instead of a stack.
-	// stack is an implementation detail of the algorithm
 	var result []string
+
 	for !IsEmpty(postfix) {
-		result = append([]string{postfix.Pop().(string)}, result...)
+		result = append([]string{postfix.Pop().(Token).Val()}, result...)
 	}
+
 	return strings.Join(result, "")
+
+	//for !IsEmpty(tempStack) {
+	//	postfix.Push(tempStack.Pop())
+	//}
+	//
+	//// return the elements as a more generic slice instead of a stack.
+	//// stack is an implementation detail of the algorithm
+	//var result []string
+	//for !IsEmpty(postfix) {
+	//	result = append([]string{postfix.Pop().(string)}, result...)
+	//}
+	//return strings.Join(result, "")
 }
 
 // returns all the possible states from the given state, including

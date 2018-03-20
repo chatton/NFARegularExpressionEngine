@@ -150,10 +150,9 @@ func Tokenize(infix string) []interface{} {
 	var escapeStr string
 	appendToS := false
 	wantsToEscape := false
-	for _, r := range infix { // handle character classes
+	for _, r := range infix {
 
-		if wantsToEscape { // second backslash in a row, escape the character
-
+		if wantsToEscape { // there was a backslash escape the character
 			escapeStr += string(r)
 			wantsToEscape = false
 			switch r {
@@ -161,27 +160,29 @@ func Tokenize(infix string) []interface{} {
 				tokens = append(tokens, DigitToken{val: string(r)})
 			case 'w': // \w
 				tokens = append(tokens, WordToken{val: string(r)})
-			case '\\': // a second backslash
+			case '\\': // a second backslash, treat it as a backslash literal
 				tokens = append(tokens, CharacterClassToken{val: string(r)})
 			}
 			continue
 		}
-		if r == '\\' { // potentially want to escape a character
+
+		if r == '\\' { // want to escape a character
 			wantsToEscape = true
 			escapeStr = ""
 			continue
 		}
+		startingClass, endingClass := r == '[', r == ']'
 
 		// don't want to append the last element in a token
-		if appendToS && r != ']' {
+		if appendToS && startingClass {
 			s += string(r) // add as a single character of a multi character token
-		} else if r != '[' && r != ']' { // add the single character as a token
+		} else if !startingClass && !endingClass { // add the single character as a token
 			tokens = append(tokens, CharacterClassToken{string(r)})
 		}
 
-		if r == '[' { // we're going to start a multi character token
+		if startingClass { // we're going to start a multi character token
 			appendToS = true
-		} else if r == ']' { // reached end of character class
+		} else if endingClass { // reached end of character class
 			tokens = append(tokens, CharacterClassToken{s}) // add the full string as a single token
 			s = ""
 			appendToS = false // stop building up character class

@@ -8,5 +8,5 @@ import (
 func main() {
 	//n := nfa.Compile("b.(c+).(e?)")
 	//fmt.Println(n.Matches("bccccccc"))
-	nfa.Tokenize(`a[bc]\de`)
+	nfa.Tokenize(`\d+e`)
 }

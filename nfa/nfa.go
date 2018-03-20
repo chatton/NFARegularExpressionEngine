@@ -158,7 +158,7 @@ func Tokenize(infix string) []interface{} {
 				tokens = append(tokens, DigitToken{val: `\d`})
 			case 'w': // \w
 				tokens = append(tokens, WordToken{val: `\w`})
-			case '\\': // a second backslash, treat it as a backslash literal
+			default:
 				tokens = append(tokens, CharacterClassToken{val: string(r)})
 			}
 			continue
@@ -169,10 +169,11 @@ func Tokenize(infix string) []interface{} {
 			escapeStr = ""
 			continue
 		}
+
 		startingClass, endingClass := r == '[', r == ']'
 
 		// don't want to append the last element in a token
-		if appendToS && startingClass {
+		if appendToS && !endingClass {
 			s += string(r) // add as a single character of a multi character token
 		} else if !startingClass && !endingClass { // add the single character as a token
 			tokens = append(tokens, CharacterClassToken{string(r)})
@@ -192,7 +193,7 @@ func Tokenize(infix string) []interface{} {
 
 func InfixToPostfix(infix string) []Token {
 
-	specials := map[string]int{"*": 10, ".": 8, "+": 9, "|": 7, "?": 6}
+	specials := map[string]int{ /*"^": 12, "$": 11,*/ "*": 10, "+": 9, "|": 8, "?": 6, ".": 5}
 
 	postfix := stack.New()
 	tempStack := stack.New()

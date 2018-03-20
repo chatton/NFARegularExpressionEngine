@@ -11,6 +11,6 @@ func main() {
 	//fmt.Println(n.Matches("bccccccc"))
 	//nfa.Tokenize(`\d+e`)
 	//nfa.InfixToPostfix("a.(b|c)")
-	n := nfa.Compile(`\w*.1.2.3.4`)
-	fmt.Println(n.Matches("ab1234"))
+	n := nfa.Compile(`\w+.\d+`)
+	fmt.Println(n.Matches("abvc123"))
 }

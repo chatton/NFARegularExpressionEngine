@@ -192,7 +192,7 @@ func Tokenize(infix string) []interface{} {
 
 func InfixToPostfix(infix string) []Token {
 
-	specials := map[string]int{"*": 10, ".": 9, "+": 8, "|": 7, "?": 6}
+	specials := map[string]int{"*": 10, ".": 8, "+": 9, "|": 7, "?": 6}
 
 	postfix := stack.New()
 	tempStack := stack.New()

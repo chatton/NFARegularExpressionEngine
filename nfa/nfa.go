@@ -111,7 +111,6 @@ func Tokenize(infix string) []interface{} {
 			default: // it's an escaped character
 				tokens = append(tokens, CharacterClassToken{val: string(r)})
 			}
-
 			continue
 		}
 
@@ -129,19 +128,9 @@ func Tokenize(infix string) []interface{} {
 		} else if !startingClass && !endingClass { // add the single character as a token
 			tokens = append(tokens, CharacterClassToken{string(r)})
 			atEnd := i == len(infix)-1
-			if !atEnd {
-				switch infix[i+1] {
-				case '+':
-				case '?':
-				case '*':
-				case '|':
-				//case '(':
-				case ')':
-				case ']':
-				default:
-					if r != '(' && r != '|' && r != '[' {
-						tokens = append(tokens, CharacterClassToken{"."})
-					}
+			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
+				if !isOpeningBracket(r) && r != '|' {
+					tokens = append(tokens, CharacterClassToken{"."})
 				}
 			}
 		}
@@ -152,11 +141,9 @@ func Tokenize(infix string) []interface{} {
 			tokens = append(tokens, CharacterClassToken{s}) // add the full string as a single token
 
 			atEnd := i == len(infix)-1
-			if !atEnd {
-				next := infix[i+1]
-				if next != '+' && next != '|' && next != '*' {
-					tokens = append(tokens, CharacterClassToken{"."})
-				}
+			if !atEnd && !isExplicitOperator(infix[i+1]) {
+				// only don't add implicit concat if the next character is an explicit operator
+				tokens = append(tokens, CharacterClassToken{"."})
 			}
 
 			s = ""
@@ -168,9 +155,21 @@ func Tokenize(infix string) []interface{} {
 	return tokens
 }
 
+func isExplicitOperator(r uint8) bool {
+	return r == '+' || r == '|' || r == '*' || r == '?'
+}
+
+func isClosingBracket(r uint8) bool {
+	return r == ']' || r == ')'
+}
+
+func isOpeningBracket(r int32) bool {
+	return r == '(' || r == '['
+}
+
 func InfixToPostfix(infix string) []Token {
 
-	specials := map[string]int{ /*"^": 12, "$": 11,*/ "*": 10, "+": 9, "|": 5, "?": 8, ".": 6}
+	specials := map[string]int{"*": 10, "+": 9, "|": 5, "?": 8, ".": 6}
 
 	postfix := stack.New()
 	tempStack := stack.New()

@@ -38,7 +38,7 @@ func TestNfa(t *testing.T) {
 		{"[123][abc]", "123abc", false},
 		{"[123][abc]", "3a", true},
 		{"[123]+[abc]*", "12321312", true},
-		{"[123]+[abc]*", "12321312abc", true},
+		{"[123]+[abc]*", "12321312abcabcaaabbbccc", true},
 		{"hellow(o?)rld", "helloworld", true},
 		{"hellow(o?)rld", "hellowrld", true},
 		{"hellow(o?)rld", "hellowrl", false},

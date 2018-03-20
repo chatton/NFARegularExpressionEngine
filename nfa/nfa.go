@@ -2,7 +2,6 @@ package nfa
 
 import (
 	"github.com/golang-collections/collections/stack" // useful stack data structure
-	"unicode"
 )
 
 type nfa struct {
@@ -13,63 +12,12 @@ type nfa struct {
 // provide mechanism for creating compiled Nfas so you don't need to construct the nfa each time you use it.
 func Compile(infix string) *nfa {
 	tokens := InfixToPostfix(infix)
-	n := tokensToNfa(tokens)
-	n.tokens = tokens
-	return n
+	return tokensToNfa(tokens)
 }
 
 type State struct {
 	symbol       interface{}
 	edge1, edge2 *State
-}
-
-type Token interface {
-	Val() string
-	Matches(r rune) bool
-}
-
-type CharacterClassToken struct {
-	val string
-}
-
-func (t CharacterClassToken) Val() string {
-	return t.val
-}
-
-// example every character in the character class
-// if the rune in question matches any of them
-// it is a match
-func (t CharacterClassToken) Matches(r rune) bool {
-	for _, char := range t.val {
-		if r == char {
-			return true
-		}
-	}
-	return false
-}
-
-type WordToken struct {
-	val string
-}
-
-func (t WordToken) Val() string {
-	return t.val
-}
-
-func (t WordToken) Matches(r rune) bool {
-	return unicode.IsLetter(r)
-}
-
-type DigitToken struct {
-	val string
-}
-
-func (t DigitToken) Matches(r rune) bool {
-	return unicode.IsDigit(r)
-}
-
-func (t DigitToken) Val() string {
-	return t.val
 }
 
 func tokensToNfa(tokens []Token) *nfa {
@@ -132,8 +80,9 @@ func tokensToNfa(tokens []Token) *nfa {
 
 		}
 	}
-
-	return nfaStack.Pop().(*nfa)
+	result := nfaStack.Pop().(*nfa)
+	result.tokens = tokens
+	return result
 }
 
 func IsEmpty(s *stack.Stack) bool {

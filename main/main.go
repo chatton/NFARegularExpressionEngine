@@ -1,10 +1,10 @@
 package main
 
 import (
-//"../nfa"
-//"fmt"
+	//"../nfa"
+	"fmt"
 )
 
 func main() {
-
+	fmt.Println("Merged!")
 }

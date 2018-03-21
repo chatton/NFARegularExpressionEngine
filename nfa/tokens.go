@@ -50,3 +50,15 @@ func (t DigitToken) Matches(r rune) bool {
 func (t DigitToken) Val() string {
 	return t.val
 }
+
+type SpaceToken struct {
+	val string
+}
+
+func (t SpaceToken) Matches(r rune) bool {
+	return r == ' '
+}
+
+func (t SpaceToken) Val() string {
+	return t.val
+}

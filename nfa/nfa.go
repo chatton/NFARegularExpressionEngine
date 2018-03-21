@@ -17,7 +17,7 @@ func Compile(infix string) *nfa {
 }
 
 type State struct {
-	symbol       interface{}
+	symbol       interface{} // Token
 	edge1, edge2 *State
 }
 
@@ -108,6 +108,8 @@ func Tokenize(infix string) []interface{} {
 				tokens = append(tokens, DigitToken{val: `\d`})
 			case 'w': // \w
 				tokens = append(tokens, WordToken{val: `\w`})
+			case 's':
+				tokens = append(tokens, SpaceToken{val: `\s`})
 			default: // it's an escaped character
 				tokens = append(tokens, CharacterClassToken{val: string(r)})
 			}
@@ -210,8 +212,8 @@ func InfixToPostfix(infix string) []Token {
 	return result
 }
 
-//returns all the possible states from the given state, including
-//state transitions with e arrows
+// returns all the possible states from the given state, including
+// state transitions with e arrows
 func addState(possibilities []*State, from, to *State) []*State {
 	seen := set.New() // keep track of the states we've already visited
 	states := stack.New()

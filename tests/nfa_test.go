@@ -42,6 +42,9 @@ func TestNfa(t *testing.T) {
 		{"hellow(o?)rld", "helloworld", true},
 		{"hellow(o?)rld", "hellowrld", true},
 		{"hellow(o?)rld", "hellowrl", false},
+		{"hello\\s+world", "hello           world", true},
+		{"hello\\s+world", "helloworld", false},
+		{"\\s+helloworld\\s+", "         helloworld                       ", true},
 	}
 
 	for _, data := range testData {

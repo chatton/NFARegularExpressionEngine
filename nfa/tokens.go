@@ -8,7 +8,8 @@ type Token interface {
 }
 
 type CharacterClassToken struct {
-	val string
+	val    string
+	negate bool
 }
 
 func (t CharacterClassToken) Val() string {
@@ -21,14 +22,21 @@ func (t CharacterClassToken) Val() string {
 func (t CharacterClassToken) Matches(r rune) bool {
 	for _, char := range t.val {
 		if r == char {
+			if t.negate {
+				return false
+			}
 			return true
 		}
+	}
+	if t.negate {
+		return true
 	}
 	return false
 }
 
 type WordToken struct {
-	val string
+	val    string
+	negate bool
 }
 
 func (t WordToken) Val() string {
@@ -40,10 +48,14 @@ func (t WordToken) Matches(r rune) bool {
 }
 
 type DigitToken struct {
-	val string
+	val    string
+	negate bool
 }
 
 func (t DigitToken) Matches(r rune) bool {
+	if t.negate {
+		return !unicode.IsDigit(r)
+	}
 	return unicode.IsDigit(r)
 }
 
@@ -52,10 +64,14 @@ func (t DigitToken) Val() string {
 }
 
 type SpaceToken struct {
-	val string
+	val    string
+	negate bool
 }
 
 func (t SpaceToken) Matches(r rune) bool {
+	if t.negate {
+		return r != ' '
+	}
 	return r == ' '
 }
 

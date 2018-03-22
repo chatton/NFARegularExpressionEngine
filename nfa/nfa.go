@@ -98,6 +98,7 @@ func Tokenize(infix string) []interface{} {
 	var escapeStr string
 	appendToS := false
 	wantsToEscape := false
+	negate := false
 	for i, r := range infix {
 
 		if wantsToEscape { // there was a backslash escape the character
@@ -105,14 +106,23 @@ func Tokenize(infix string) []interface{} {
 			wantsToEscape = false
 			switch r {
 			case 'd': // \d
-				tokens = append(tokens, DigitToken{val: `\d`})
+				tokens = append(tokens, DigitToken{val: `\d`, negate: negate})
 			case 'w': // \w
-				tokens = append(tokens, WordToken{val: `\w`})
+				tokens = append(tokens, WordToken{val: `\w`, negate: negate})
 			case 's':
-				tokens = append(tokens, SpaceToken{val: `\s`})
+				tokens = append(tokens, SpaceToken{val: `\s`, negate: negate})
 			default: // it's an escaped character
-				tokens = append(tokens, CharacterClassToken{val: string(r)})
+				tokens = append(tokens, CharacterClassToken{val: string(r), negate: negate})
 			}
+			negate = false
+
+			atEnd := i == len(infix)-1
+			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
+				if !isOpeningBracket(r) && r != '|' {
+					tokens = append(tokens, CharacterClassToken{val: ".", negate: false})
+				}
+			}
+
 			continue
 		}
 
@@ -122,30 +132,37 @@ func Tokenize(infix string) []interface{} {
 			continue
 		}
 
+		if r == '^' {
+			negate = true
+			continue
+		}
+
 		startingClass, endingClass := r == '[', r == ']'
 
 		// don't want to append the last element in a token
 		if appendToS && !endingClass {
 			s += string(r) // add as a single character of a multi character token
 		} else if !startingClass && !endingClass { // add the single character as a token
-			tokens = append(tokens, CharacterClassToken{string(r)})
+			tokens = append(tokens, CharacterClassToken{string(r), negate})
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
 				if !isOpeningBracket(r) && r != '|' {
-					tokens = append(tokens, CharacterClassToken{"."})
+					tokens = append(tokens, CharacterClassToken{val: ".", negate: false})
 				}
 			}
+			negate = false
 		}
 
 		if startingClass { // we're going to start a multi character token
 			appendToS = true
 		} else if endingClass { // reached end of character class
-			tokens = append(tokens, CharacterClassToken{s}) // add the full string as a single token
+			tokens = append(tokens, CharacterClassToken{val: s, negate: negate}) // add the full string as a single token
+			negate = false
 
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) {
 				// only don't add implicit concat if the next character is an explicit operator
-				tokens = append(tokens, CharacterClassToken{"."})
+				tokens = append(tokens, CharacterClassToken{".", false})
 			}
 
 			s = ""

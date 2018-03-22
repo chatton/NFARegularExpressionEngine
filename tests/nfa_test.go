@@ -45,6 +45,15 @@ func TestNfa(t *testing.T) {
 		{"hello\\s+world", "hello           world", true},
 		{"hello\\s+world", "helloworld", false},
 		{"\\s+helloworld\\s+", "         helloworld                       ", true},
+		{`^a`, "a", false},
+		{`^[123]`, "2", false},
+		{`^[123]`, "4", true},
+		{`abc^\def`, "abc5ef", false},
+		{`abc\def`, "abc5ef", true},
+		{`abc\d+ef`, "abc5678765446ef", true},
+		{`\d\w+\d`, "1sdfsdfds2", true},
+		{`\d\w+\d`, "12", false},
+		{`\d\w?\d`, "12", true},
 	}
 
 	for _, data := range testData {

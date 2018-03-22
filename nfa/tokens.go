@@ -78,3 +78,20 @@ func (t SpaceToken) Matches(r rune) bool {
 func (t SpaceToken) Val() string {
 	return t.val
 }
+
+type AnyToken struct {
+	val    string
+	negate bool
+}
+
+func (t AnyToken) Val() string {
+	return t.val
+}
+
+// Any token will match any character
+func (t AnyToken) Matches(r rune) bool {
+	if t.negate {
+		return false
+	}
+	return true
+}

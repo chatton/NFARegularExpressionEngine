@@ -12,6 +12,8 @@ func TestNfa(t *testing.T) {
 		Expected         bool
 	}{
 		{"abc", "abc", true},
+		{"1____6", "123456", true},
+		{"1____6", "654321", false},
 		{"a?b?c?", "abc", true},
 		{"a?b?c?", "ac", true},
 		{"a?b?c?", "c", true},
@@ -25,6 +27,7 @@ func TestNfa(t *testing.T) {
 		{"abcd", "abc", false},
 		{"ab|cd", "ab", true},
 		{"ab|cd", "ad", false},
+		{"ab|c_", "cb", true},
 		{`\d*\w*`, "123hello", true},
 		{`\d*\w*`, "hello", true},
 		{`\d*\w*`, "123", true},
@@ -54,6 +57,10 @@ func TestNfa(t *testing.T) {
 		{`\d\w+\d`, "1sdfsdfds2", true},
 		{`\d\w+\d`, "12", false},
 		{`\d\w?\d`, "12", true},
+		{`\\hello`, `\hello`, true},
+		{`hel_o`, `hello`, true},
+		{`h_llo`, `hello`, true},
+		{`_ello`, `hello`, true},
 	}
 
 	for _, data := range testData {

@@ -132,8 +132,21 @@ func Tokenize(infix string) []interface{} {
 			continue
 		}
 
+		// if we should invert the match
 		if r == '^' {
 			negate = true
+			continue
+		}
+
+		// if it's an underscore, add a token that will match any character
+		if r == '_' {
+			tokens = append(tokens, AnyToken{val: "_", negate: negate})
+			atEnd := i == len(infix)-1
+			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
+				if !isOpeningBracket(r) && r != '|' {
+					tokens = append(tokens, CharacterClassToken{val: ".", negate: false})
+				}
+			}
 			continue
 		}
 

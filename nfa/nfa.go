@@ -87,6 +87,7 @@ func tokensToNfa(tokens []Token) *nfa {
 	return result
 }
 
+// Helper method as stacks don't have an IsEmpty method
 func IsEmpty(s *stack.Stack) bool {
 	return s.Len() == 0
 }
@@ -101,6 +102,8 @@ func Tokenize(infix string) []interface{} {
 	wantsToEscape := false
 	negate := false
 
+	// all an input of "(?i)" + regex which will make it case insensitive.
+	// put the infix string to lower case to eliminate differences between cases.
 	if ignoreCase := len(infix) >= 4 && strings.HasPrefix(infix, "(?i)"); ignoreCase {
 		infix = strings.ToLower(infix[4:]) // ignore the (?i) on the string
 	}
@@ -303,4 +306,11 @@ func (n *nfa) Matches(matchString string) bool {
 	}
 
 	return false
+}
+
+// function for use when you don't need to keep the NFA for multiple uses.
+// Constructs nfa and calls the Matches method.
+func MatchString(infix, matchString string) bool {
+	n := Compile(infix)
+	return n.Matches(matchString)
 }

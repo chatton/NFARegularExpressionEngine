@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fmt.Println(nfa.MatchString("abc+", "abccccccc"))
+	fmt.Println(nfa.Count("\\d\\w", "1a2b3cc"))
 }

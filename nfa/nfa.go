@@ -1,6 +1,7 @@
 package nfa
 
 import (
+	"../utils"
 	"github.com/golang-collections/collections/set"   // used to keep track of seen states
 	"github.com/golang-collections/collections/stack" // useful stack data structure used throughout the code
 	"strings"
@@ -306,6 +307,17 @@ func (n *nfa) Matches(matchString string) bool {
 	}
 
 	return false
+}
+
+// returns the number of unique occurrences of subString in fullString
+func Count(subString, fullString string) int {
+	count := 0
+	for _, s := range utils.AllSubstrings(fullString) {
+		if MatchString(subString, s) {
+			count++
+		}
+	}
+	return count
 }
 
 // function for use when you don't need to keep the NFA for multiple uses.

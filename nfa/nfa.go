@@ -3,6 +3,7 @@ package nfa
 import (
 	"github.com/golang-collections/collections/set"   // used to keep track of seen states
 	"github.com/golang-collections/collections/stack" // useful stack data structure used throughout the code
+	"strings"
 )
 
 type nfa struct {
@@ -99,6 +100,11 @@ func Tokenize(infix string) []interface{} {
 	appendToS := false
 	wantsToEscape := false
 	negate := false
+
+	if ignoreCase := len(infix) >= 4 && strings.HasPrefix(infix, "(?i)"); ignoreCase {
+		infix = strings.ToLower(infix[4:]) // ignore the (?i) on the string
+	}
+
 	for i, r := range infix {
 
 		if wantsToEscape { // there was a backslash escape the character

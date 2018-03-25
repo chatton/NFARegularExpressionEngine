@@ -63,6 +63,8 @@ func TestNfa(t *testing.T) {
 		{`_ello`, `hello`, true},
 		{"(?i)HELlo", `hello`, true},
 		{"HELlo", `hello`, false},
+		{"^[1]", `h`, true},
+		{"^\\d", `h`, true},
 	}
 
 	for _, data := range testData {

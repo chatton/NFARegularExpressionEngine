@@ -1,0 +1,4 @@
+1. Match a string
+2. Count substrings
+3. Display features
+4. Quit

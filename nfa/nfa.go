@@ -313,7 +313,7 @@ func (n *nfa) Matches(matchString string) bool {
 func Count(subString, fullString string) int {
 	count := 0
 	for _, s := range utils.AllSubstrings(fullString) {
-		if MatchString(subString, s) {
+		if MatchString(subString, s) { // need to reconstruct the nfa for each substring
 			count++
 		}
 	}

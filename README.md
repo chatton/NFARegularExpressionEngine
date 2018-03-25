@@ -2,7 +2,7 @@
 
 My name is Cian Hatton
 
-This repository holds a regex expression engine created by modelling a non-deterministic finite automaton.
+This repository holds a regex expression engine created by modelling a non-deterministic finite automaton (NFA).
 
 This project was part of my Graph Theory module in my 3rd year Software Development course at GMIT.
 
@@ -29,6 +29,16 @@ This project was part of my Graph Theory module in my 3rd year Software Developm
 
 ## Limitations
 
+This Regular Expression Engine cannot do capture groups, or perform any other tasks that would require backtracking. This is a [limitation of NFAs](http://useless-factor.blogspot.ie/2008/05/regexp-research.html).
+
 ## Technologies used
 
+In this project, I used the [Go Programming Language](https://golang.org/)
+
 ## References
+
+During development I frequently consulted documentation for both the [Python RE module](https://docs.python.org/3/library/re.html) and the [Go Regexp package](https://golang.org/pkg/regexp/)
+
+I consulted [this paper](https://swtch.com/~rsc/regexp/regexp1.html) written by Russ Cox in order to implement Thompson's construction algorithm.
+
+

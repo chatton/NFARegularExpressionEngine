@@ -8,8 +8,9 @@ type Token interface {
 }
 
 type CharacterClassToken struct {
-	val    string
-	negate bool
+	val             string
+	negate          bool
+	caseInsensitive bool
 }
 
 func (t CharacterClassToken) Val() string {
@@ -21,7 +22,12 @@ func (t CharacterClassToken) Val() string {
 // it is a match
 func (t CharacterClassToken) Matches(r rune) bool {
 	for _, char := range t.val {
+		if t.caseInsensitive {
+			r = unicode.ToLower(r) // ignore the case of the character in question
+		}
+
 		if r == char {
+
 			if t.negate {
 				return false
 			}

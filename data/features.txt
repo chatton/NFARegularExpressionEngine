@@ -11,3 +11,4 @@ _ - Any Character: Matches exactly 1 character. E.g \d_\d will match 1k8
 * - Zero or More: Causes the regular expression to match zero or more occurrences. E.g. H* will match zero or more H characters
 ? - One or Zero: Causes the regular expression to match exactly 0 or 1 occurrence. E.g. hel?o will match "heo" and "helo"
 | - Or: Matches if either the LHS or RHS matches. E.g. ([\d]|j) will match any single digit or the letter j
+(?i) Ignore Case: Prefix any expression with (?i) and the case will be ignored. E.g. (?i)HeLlo will match hELlO

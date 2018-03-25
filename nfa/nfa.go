@@ -102,10 +102,10 @@ func Tokenize(infix string) []interface{} {
 	appendToS := false
 	wantsToEscape := false
 	negate := false
-
+	ignoreCase := len(infix) >= 4 && strings.HasPrefix(infix, "(?i)")
 	// all an input of "(?i)" + regex which will make it case insensitive.
 	// put the infix string to lower case to eliminate differences between cases.
-	if ignoreCase := len(infix) >= 4 && strings.HasPrefix(infix, "(?i)"); ignoreCase {
+	if ignoreCase {
 		infix = strings.ToLower(infix[4:]) // ignore the (?i) on the string
 	}
 
@@ -122,7 +122,7 @@ func Tokenize(infix string) []interface{} {
 			case 's':
 				tokens = append(tokens, SpaceToken{val: `\s`, negate: negate})
 			default: // it's an escaped character
-				tokens = append(tokens, CharacterClassToken{val: string(r), negate: negate})
+				tokens = append(tokens, CharacterClassToken{val: string(r), negate: negate, caseInsensitive: ignoreCase})
 			}
 			negate = false
 
@@ -166,7 +166,7 @@ func Tokenize(infix string) []interface{} {
 		if appendToS && !endingClass {
 			s += string(r) // add as a single character of a multi character token
 		} else if !startingClass && !endingClass { // add the single character as a token
-			tokens = append(tokens, CharacterClassToken{string(r), negate})
+			tokens = append(tokens, CharacterClassToken{string(r), negate, ignoreCase})
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
 				if !isOpeningBracket(r) && r != '|' {
@@ -185,7 +185,7 @@ func Tokenize(infix string) []interface{} {
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) {
 				// only don't add implicit concat if the next character is an explicit operator
-				tokens = append(tokens, CharacterClassToken{".", false})
+				tokens = append(tokens, CharacterClassToken{".", false, ignoreCase})
 			}
 
 			s = ""

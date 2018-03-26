@@ -50,7 +50,7 @@ fmt.Println(nfa.Matches("123456")) // false
 
 ```go
 number := nfa.Count("ab", "ababab") // 3
-number2 := nfa.Count(`\d`, "123456abc78) // 8
+number2 := nfa.Count(`\d`, "123456abc78") // 8
 ```
 
 ## The Supported Regular Expression Lanuguage

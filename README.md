@@ -56,17 +56,76 @@ number2 := nfa.Count(`\d`, "123456abc78) // 8
 ## The Supported Regular Expression Lanuguage
 
 - **\d**  Digit: Matches a digit between 0 and 9
+
+```go
+nfa.MatchString(`\d234`, "1234") // true
+```
+
 - **\w**  Word: Matches a letter in the alphabet - case sensitively
+
+```go
+nfa.MatchString(`hello \w\w\w\w\w`, "hello world") // true
+```
 - **\s**  Space: Matches a single space
-- **\** Escape: Use \ to escape any special characters. E.g. \\d\\w will match the string "\d\w"
-- **[abc1]** Character Class: Matches one of a, b, c or 1
-- **^** Negate: Negates the result .e.g '^\d' will match a single character that isn't a digit
+```go
+nfa.MatchString(`\w+\s\w+\s`, "hello friend ") // true
+```
+- **\** Escape: Use \ to escape any special characters
+```go
+nfa.MatchString("\\d", `\d`) // true
+```
+- **[abc1]** Character Class
+```go
+nfa.MatchString("[123][456]","15") // true
+nfa.MatchString("[123][456]","12") // false
+nfa.MatchString("[123]+[456]+","123123456654") // true
+```
+- **^** Negate: Negates the result.
+```go
+nfa.MatchString("^[abc]","d") // true
+nfa.MatchString("^[1]","1") // false
+```
 - **_** Any Character: Matches exactly 1 character. E.g \d_\d will match 1k8
+
+```go
+nfa.MatchString("he_lo","hello") // true
+nfa.MatchString("_1_2_3","a1b2v3") // true
+```
+
 - **\+** One or More: Causes the regular expression to match one or more occurrences. E.g 1+ will match one or more 1s
+
+```go
+nfa.MatchString(`\d+`,"1234") // true
+nfa.MatchString(`\d+`,"1234") // false
+nfa.MatchString(`1+2+1+`,"11112221111") // true
+```
+
 - \* Zero or More: Causes the regular expression to match zero or more occurrences. E.g. H* will match zero or more H characters
+```go
+nfa.MatchString(`\d*`,"1234") // true
+nfa.MatchString(`\d*`,"") // true
+nfa.MatchString(`1*2*1*`,"2221111") // true
+```
+
 - **?** One or Zero: Causes the regular expression to match exactly 0 or 1 occurrence. E.g. hel?o will match "heo" and "helo"
+
+```go
+nfa.MatchString(`hello?`,"hell") // true
+nfa.MatchString(`hello?`,"hello") // true
+```
+
 - **|** Or: Matches if either the LHS or RHS matches. E.g. ([\d]|j) will match any single digit or the letter j
-- **(?i)** Ignore Case: Prefix any expression with (?i) and the case will be ignored. E.g. (?i)HeLlo will match hELlO
+```go
+nfa.MatchString(`world ([123]|[abc])`,"world 1") // true
+nfa.MatchString(`world ([123]|[abc])`,"world b") // true
+nfa.MatchString(`world ([123]|[abc])`,"world p") // false
+
+```
+- **(?i)** Ignore Case: Prefix any expression with (?i)
+
+```go
+nfa.MatchString(`(?i)HeLlo`,"hElLo") // true
+```
 
 ## Limitations
 

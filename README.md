@@ -96,7 +96,7 @@ nfa.MatchString("_1_2_3","a1b2v3") // true
 
 ```go
 nfa.MatchString(`\d+`,"1234") // true
-nfa.MatchString(`\d+`,"1234") // false
+nfa.MatchString(`\d+`,"") // false
 nfa.MatchString(`1+2+1+`,"11112221111") // true
 ```
 

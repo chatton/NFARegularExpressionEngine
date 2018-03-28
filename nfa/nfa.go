@@ -106,7 +106,7 @@ func Tokenize(infix string) []interface{} {
 	// all an input of "(?i)" + regex which will make it case insensitive.
 	// put the infix string to lower case to eliminate differences between cases.
 	if ignoreCase {
-		infix = strings.ToLower(infix[4:]) // ignore the (?i) on the string
+		infix = infix[4:] // remove the (?i) on the string
 	}
 
 	for i, r := range infix {

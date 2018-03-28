@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"strconv"
 
 	"../nfa"
 	"fmt"
@@ -60,14 +61,22 @@ func matchStringOption() {
 	}
 
 	if result {
-		color.Green("The regular expression: " + pattern + " matched " + matchString + "!")
+		fmt.Println("The regular expression: " + pattern + color.GreenString(" matched ") + matchString + "!")
 	} else {
-		color.Yellow("The regular expression: " + pattern + " did not match " + matchString + ".")
+		fmt.Println("The regular expression: " + pattern + color.YellowString(" did not match ") + matchString + ".")
 	}
 }
 
 func countOption() {
-
+	fmt.Println("Enter regular expression.")
+	input.Scan()
+	pattern := input.Text()
+	fmt.Print("Enter a string to count number of occurrences: ")
+	input.Scan()
+	searchString := input.Text()
+	num := nfa.Count(pattern, searchString)
+	numStr := strconv.Itoa(num)
+	fmt.Println("The pattern " + pattern + " occurred " + numStr + " times in the string " + searchString)
 }
 
 func printFile(fileName string) {

@@ -23,7 +23,9 @@ func (t CharacterClassToken) Val() string {
 func (t CharacterClassToken) Matches(r rune) bool {
 	for _, char := range t.val {
 		if t.caseInsensitive {
-			r = unicode.ToLower(r) // ignore the case of the character in question
+			// ignore the case of both of the characters in question
+			r = unicode.ToLower(r)
+			char = unicode.ToLower(char)
 		}
 
 		if r == char {

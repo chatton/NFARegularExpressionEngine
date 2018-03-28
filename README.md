@@ -8,6 +8,37 @@ This project was part of my Graph Theory module in my 3rd year Software Developm
 
 ## Setup Instructions
 
+Before running this application, you must make sure to have [Go](https://golang.org/dl/) installed.
+
+This application makes use of several additional modules which can be aquired using the `go get` command. Before using this command, you must ensure that the `GOPATH` is set up. See (this page)[https://github.com/golang/go/wiki/SettingGOPATH] for instructions on how to set everything up in your operating system.
+
+
+if you have [git](https://git-scm.com/downloads) installed, you can run the command.
+
+```bash
+git clone https://github.com/chatton/NFARegularExpressionEngine.git
+```
+
+to clone the repository. If you don't want to use git, you can click on the Clone or Download button and download the source code as a zip file.
+
+Navigate to the new directory
+
+```bash
+cd NFARegularExpressionEngine
+```
+
+download the dependencies for the project.
+
+```bash
+go get github.com/golang-collections/collections/set github.com/golang-collections/collections/stack github.com/fatih/color
+```
+
+and run it.
+
+```bash
+go run main/main.go
+```
+
 ## Design Decisions
 
 Initially each token in the regular expression was a single character. This restricted the flexibility of the regular expressions that would be possible to create.
@@ -85,14 +116,14 @@ nfa.MatchString("[123]+[456]+","123123456654") // true
 nfa.MatchString("^[abc]","d") // true
 nfa.MatchString("^[1]","1") // false
 ```
-- `_` Any Character: Matches exactly 1 character. E.g \d_\d will match 1k8
+- `_` Any Character: Matches exactly 1 character.
 
 ```go
 nfa.MatchString("he_lo","hello") // true
 nfa.MatchString("_1_2_3","a1b2v3") // true
 ```
 
-- `+` One or More: Causes the regular expression to match one or more occurrences. E.g 1+ will match one or more 1s
+- `+` One or More: Causes the regular expression to match one or more occurrences.
 
 ```go
 nfa.MatchString(`\d+`,"1234") // true
@@ -100,21 +131,21 @@ nfa.MatchString(`\d+`,"") // false
 nfa.MatchString(`1+2+1+`,"11112221111") // true
 ```
 
-- `*` Zero or More: Causes the regular expression to match zero or more occurrences. E.g. H* will match zero or more H characters
+- `*` Zero or More: Causes the regular expression to match zero or more occurrences.
 ```go
 nfa.MatchString(`\d*`,"1234") // true
 nfa.MatchString(`\d*`,"") // true
 nfa.MatchString(`1*2*1*`,"2221111") // true
 ```
 
-- `?` One or Zero: Causes the regular expression to match exactly 0 or 1 occurrence. E.g. hel?o will match "heo" and "helo"
+- `?` One or Zero: Causes the regular expression to match exactly 0 or 1 occurrence.
 
 ```go
 nfa.MatchString(`hello?`,"hell") // true
 nfa.MatchString(`hello?`,"hello") // true
 ```
 
-- `|` Or: Matches if either the LHS or RHS matches. E.g. ([\d]|j) will match any single digit or the letter j
+- `|` Or: Matches if either the LHS or RHS matches.
 ```go
 nfa.MatchString(`world ([123]|[abc])`,"world 1") // true
 nfa.MatchString(`world ([123]|[abc])`,"world b") // true

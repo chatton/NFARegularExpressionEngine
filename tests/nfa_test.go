@@ -2,8 +2,29 @@ package tests
 
 import (
 	"../nfa"
+	"strconv"
 	"testing"
 )
+
+func TestCount(t *testing.T) {
+	testData := []struct {
+		InputRegex, MatchString string
+		ExpectedResult          int
+	}{
+		{"ab", "abab", 2},
+		{"a", "aabva", 3},
+		{"1*", "11", 4}, // matches the empty string, "1", "1" and "11"
+		{"[12][34]", "13", 1},
+		{"abcd", "abcdabcdabcf", 2},
+	}
+
+	for _, data := range testData {
+		result := nfa.Count(data.InputRegex, data.MatchString)
+		if result != data.ExpectedResult {
+			t.Error("The pattern " + data.MatchString + " had " + strconv.Itoa(result) + " occurrences the string when it should have had: " + strconv.Itoa(data.ExpectedResult))
+		}
+	}
+}
 
 func TestNfa(t *testing.T) {
 	testData := []struct {
@@ -65,7 +86,6 @@ func TestNfa(t *testing.T) {
 		{"HELlo", `hello`, false},
 		{"^[1]", `h`, true},
 		{"^\\d", `h`, true},
-		//{"(?i)HelLo", `HellO`, true},
 	}
 
 	for _, data := range testData {

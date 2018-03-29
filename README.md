@@ -50,6 +50,20 @@ and run it.
 go run main/main.go
 ```
 
+If you want to also run 
+
+```bash
+go test .\tests\nfa_test.go
+```
+
+you should get an output similar to
+
+```bash
+ok      command-line-arguments  0.076s
+```
+
+indicating that all tests pass.
+
 ## Design Decisions
 
 Initially each token in the regular expression was a single character. This restricted the flexibility of the regular expressions that would be possible to create.

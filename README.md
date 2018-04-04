@@ -187,6 +187,10 @@ nfa.MatchString(`(?i)HeLlo`,"hElLo") // true
 
 This Regular Expression Engine cannot do capture groups, or perform any other tasks that would require backtracking. This is a [limitation of NFAs](http://useless-factor.blogspot.ie/2008/05/regexp-research.html).
 
+There is not any validation of the regular expressions passed in. As a result, the program will likely crash given a syntactically incorrect expression (within the given language).
+
+Validation needs to be added in order to ensure that an error is passed back instead of allowing the program to crash.
+
 ## Technologies used
 
 In this project, I used the [Go Programming Language](https://golang.org/)

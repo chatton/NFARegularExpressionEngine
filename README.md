@@ -193,6 +193,8 @@ In this project, I used the [Go Programming Language](https://golang.org/)
 
 ## References
 
+This project was initially based on a series of video lectures created by the lecturer for this course [Ian Mcloughlin](https://github.com/ianmcloughlin), I then built upon them and added additional features.
+
 During development I frequently consulted documentation for both the [Python RE module](https://docs.python.org/3/library/re.html) and the [Go Regexp package](https://golang.org/pkg/regexp/)
 
 I consulted [this paper](https://swtch.com/~rsc/regexp/regexp1.html) written by Russ Cox in order to implement Thompson's construction algorithm.

@@ -16,7 +16,7 @@ This application makes use of several additional modules which can be aquired us
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 ```
-otherwise, see (this page)[https://github.com/golang/go/wiki/SettingGOPATH] for instructions on how to set everything up in your operating system.
+otherwise, see [this page](https://github.com/golang/go/wiki/SettingGOPATH) for instructions on how to set everything up in your operating system.
 
 if you're on a Ubuntu based system, you can run the commands
 

@@ -12,17 +12,15 @@ Before running this application, you must make sure to have [Go](https://golang.
 
 This application makes use of several additional modules which can be aquired using the `go get` command. Before using this command, you must ensure that the `GOPATH` is set up. 
 
+if you're on a Ubuntu based system, you can run the commands
+
 ```bash
 export GOPATH=$HOME/go
 export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 ```
 otherwise, see [this page](https://github.com/golang/go/wiki/SettingGOPATH) for instructions on how to set everything up in your operating system.
 
-if you're on a Ubuntu based system, you can run the commands
-
-
 in order to set up your go path temporarily to test this application.
-
 
 if you have [git](https://git-scm.com/downloads) installed, you can run the command.
 

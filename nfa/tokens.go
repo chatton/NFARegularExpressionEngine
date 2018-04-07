@@ -2,25 +2,25 @@ package nfa
 
 import "unicode"
 
-type Token interface {
+type token interface {
 	Val() string
 	Matches(r rune) bool
 }
 
-type CharacterClassToken struct {
+type characterClassToken struct {
 	val             string
 	negate          bool
 	caseInsensitive bool
 }
 
-func (t CharacterClassToken) Val() string {
+func (t characterClassToken) Val() string {
 	return t.val
 }
 
 // example every character in the character class
 // if the rune in question matches any of them
 // it is a match
-func (t CharacterClassToken) Matches(r rune) bool {
+func (t characterClassToken) Matches(r rune) bool {
 	for _, char := range t.val {
 		if t.caseInsensitive {
 			// ignore the case of both of the characters in question
@@ -42,62 +42,62 @@ func (t CharacterClassToken) Matches(r rune) bool {
 	return false
 }
 
-type WordToken struct {
+type wordToken struct {
 	val    string
 	negate bool
 }
 
-func (t WordToken) Val() string {
+func (t wordToken) Val() string {
 	return t.val
 }
 
-func (t WordToken) Matches(r rune) bool {
+func (t wordToken) Matches(r rune) bool {
 	return unicode.IsLetter(r)
 }
 
-type DigitToken struct {
+type digitToken struct {
 	val    string
 	negate bool
 }
 
-func (t DigitToken) Matches(r rune) bool {
+func (t digitToken) Matches(r rune) bool {
 	if t.negate {
 		return !unicode.IsDigit(r)
 	}
 	return unicode.IsDigit(r)
 }
 
-func (t DigitToken) Val() string {
+func (t digitToken) Val() string {
 	return t.val
 }
 
-type SpaceToken struct {
+type spaceToken struct {
 	val    string
 	negate bool
 }
 
-func (t SpaceToken) Matches(r rune) bool {
+func (t spaceToken) Matches(r rune) bool {
 	if t.negate {
 		return r != ' '
 	}
 	return r == ' '
 }
 
-func (t SpaceToken) Val() string {
+func (t spaceToken) Val() string {
 	return t.val
 }
 
-type AnyToken struct {
+type anyToken struct {
 	val    string
 	negate bool
 }
 
-func (t AnyToken) Val() string {
+func (t anyToken) Val() string {
 	return t.val
 }
 
 // Any token will match any character
-func (t AnyToken) Matches(r rune) bool {
+func (t anyToken) Matches(r rune) bool {
 	if t.negate {
 		return false
 	}

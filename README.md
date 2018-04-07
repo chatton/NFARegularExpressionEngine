@@ -39,7 +39,7 @@ cd NFARegularExpressionEngine
 download the dependencies for the project.
 
 ```bash
-go get github.com/golang-collections/collections/set github.com/golang-collections/collections/stack github.com/fatih/color
+go get github.com/golang-collections/collections/set github.com/golang-collections/collections/stack
 ```
 
 and run it.

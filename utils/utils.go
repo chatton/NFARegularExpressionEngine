@@ -13,9 +13,7 @@ func AllSubstrings(str string) []string {
 			} else {
 				all = append(all, s)
 			}
-
 		}
 	}
-
 	return all
 }

@@ -8,79 +8,78 @@ import (
 )
 
 type nfa struct {
-	Initial, Accept *State
-	tokens          []Token
+	initial, accept *state
+	tokens          []token
 }
 
 // provide mechanism for creating compiled Nfas so you don't need to construct the nfa each time you use it.
 func Compile(infix string) *nfa {
-	tokens := InfixToPostfix(infix)
+	tokens := infixToPostfix(infix)
 	return tokensToNfa(tokens)
 }
 
-type State struct {
-	symbol       interface{} // Token
-	edge1, edge2 *State
+type state struct {
+	symbol       interface{} // the symbol of each state should be an implementation of the token interface
+	edge1, edge2 *state
 }
 
-func tokensToNfa(tokens []Token) *nfa {
+func tokensToNfa(tokens []token) *nfa {
 	nfaStack := stack.New()
 	for _, tok := range tokens {
-		switch tok.(Token).Val() {
+		switch tok.(token).Val() {
 		case ".":
 			// take 2 elements off the stack
 			frag2 := nfaStack.Pop().(*nfa)
 			frag1 := nfaStack.Pop().(*nfa)
 			// join them together
-			frag1.Accept.edge1 = frag2.Initial
+			frag1.accept.edge1 = frag2.initial
 			// place the single fragment on top of the stack
-			nfaStack.Push(&nfa{Initial: frag1.Initial, Accept: frag2.Accept})
+			nfaStack.Push(&nfa{initial: frag1.initial, accept: frag2.accept})
 		case "|":
 			// take 2 elements off the stack
 			frag2 := nfaStack.Pop().(*nfa)
 			frag1 := nfaStack.Pop().(*nfa)
 			// create a new initial state which points at both fragments
-			initial := State{edge1: frag1.Initial, edge2: frag2.Initial}
-			accept := State{}
+			initial := state{edge1: frag1.initial, edge2: frag2.initial}
+			accept := state{}
 			// point both fragments at the new accept state
-			frag1.Accept.edge1 = &accept
-			frag2.Accept.edge1 = &accept
+			frag1.accept.edge1 = &accept
+			frag2.accept.edge1 = &accept
 
 			// add the new fragment to the stack.
-			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
+			nfaStack.Push(&nfa{initial: &initial, accept: &accept})
 		case "*":
 			// take a single element off of the stack
 			frag := nfaStack.Pop().(*nfa)
-			accept := State{}
+			accept := state{}
 			// create and edge pointing back at itself and one towards the new accept state
-			initial := State{edge1: frag.Initial, edge2: &accept}
+			initial := state{edge1: frag.initial, edge2: &accept}
 			// the accept state points back at the initial state
-			frag.Accept.edge1 = frag.Initial
+			frag.accept.edge1 = frag.initial
 			// the second edge loops around
-			frag.Accept.edge2 = &accept
+			frag.accept.edge2 = &accept
 			// add it to the stack
-			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
+			nfaStack.Push(&nfa{initial: &initial, accept: &accept})
 		case "+":
 			// take a single element off of the stack
 			frag := nfaStack.Pop().(*nfa)
-			accept := State{}
-			initial := State{edge1: frag.Initial, edge2: &accept}
+			accept := state{}
+			initial := state{edge1: frag.initial, edge2: &accept}
 
-			frag.Accept.edge1 = &initial
+			frag.accept.edge1 = &initial
 
-			nfaStack.Push(&nfa{Initial: frag.Initial, Accept: &accept})
+			nfaStack.Push(&nfa{initial: frag.initial, accept: &accept})
 		case "?":
 			// take a single element off of the stack
 			frag := nfaStack.Pop().(*nfa)
 			// create a new state that points to the existing item and also the accept state
-			initial := State{edge1: frag.Initial, edge2: frag.Accept}
+			initial := state{edge1: frag.initial, edge2: frag.accept}
 			// push the new Nfa onto the stack
-			nfaStack.Push(&nfa{Initial: &initial, Accept: frag.Accept})
+			nfaStack.Push(&nfa{initial: &initial, accept: frag.accept})
 		default:
-			accept := State{}
-			initial := State{edge1: &accept, symbol: tok}
-			nfaStack.Push(&nfa{Initial: &initial, Accept: &accept})
-
+			accept := state{}
+			initial := state{edge1: &accept, symbol: tok}
+			nfaStack.Push(&nfa{initial: &initial, accept: &accept})
 		}
 	}
 	result := nfaStack.Pop().(*nfa)
@@ -93,7 +92,8 @@ func IsEmpty(s *stack.Stack) bool {
 	return s.Len() == 0
 }
 
-func Tokenize(infix string) []interface{} {
+// function to covert an infix string into a list of tokens (still in infix)
+func tokenize(infix string) []interface{} {
 
 	var tokens []interface{}
 
@@ -116,20 +116,21 @@ func Tokenize(infix string) []interface{} {
 			wantsToEscape = false
 			switch r {
 			case 'd': // \d
-				tokens = append(tokens, DigitToken{val: `\d`, negate: negate})
+				tokens = append(tokens, digitToken{val: `\d`, negate: negate})
 			case 'w': // \w
-				tokens = append(tokens, WordToken{val: `\w`, negate: negate})
+				tokens = append(tokens, wordToken{val: `\w`, negate: negate})
 			case 's':
-				tokens = append(tokens, SpaceToken{val: `\s`, negate: negate})
+				tokens = append(tokens, spaceToken{val: `\s`, negate: negate})
 			default: // it's an escaped character
-				tokens = append(tokens, CharacterClassToken{val: string(r), negate: negate, caseInsensitive: ignoreCase})
+				tokens = append(tokens, characterClassToken{val: string(r), negate: negate, caseInsensitive: ignoreCase})
 			}
 			negate = false
 
+			// handle implicit concatenation
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
 				if !isOpeningBracket(r) && r != '|' {
-					tokens = append(tokens, CharacterClassToken{val: ".", negate: false})
+					tokens = append(tokens, characterClassToken{val: ".", negate: false})
 				}
 			}
 
@@ -148,13 +149,15 @@ func Tokenize(infix string) []interface{} {
 			continue
 		}
 
-		// if it's an underscore, add a token that will match any character
+		// if it's an underscore (and isn't being escaped), add a token that will match any character
 		if r == '_' {
-			tokens = append(tokens, AnyToken{val: "_", negate: negate})
+			tokens = append(tokens, anyToken{val: "_", negate: negate})
+
+			// handle implicit concatenation
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
 				if !isOpeningBracket(r) && r != '|' {
-					tokens = append(tokens, CharacterClassToken{val: ".", negate: false})
+					tokens = append(tokens, characterClassToken{val: ".", negate: false})
 				}
 			}
 			continue
@@ -166,11 +169,13 @@ func Tokenize(infix string) []interface{} {
 		if appendToS && !endingClass {
 			s += string(r) // add as a single character of a multi character token
 		} else if !startingClass && !endingClass { // add the single character as a token
-			tokens = append(tokens, CharacterClassToken{string(r), negate, ignoreCase})
+			tokens = append(tokens, characterClassToken{string(r), negate, ignoreCase})
+
+			// handle implicit concatenation
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) && !isClosingBracket(infix[i+1]) {
 				if !isOpeningBracket(r) && r != '|' {
-					tokens = append(tokens, CharacterClassToken{val: ".", negate: false})
+					tokens = append(tokens, characterClassToken{val: ".", negate: false})
 				}
 			}
 			negate = false
@@ -179,13 +184,13 @@ func Tokenize(infix string) []interface{} {
 		if startingClass { // we're going to start a multi character token
 			appendToS = true
 		} else if endingClass { // reached end of character class
-			tokens = append(tokens, CharacterClassToken{val: s, negate: negate}) // add the full string as a single token
+			tokens = append(tokens, characterClassToken{val: s, negate: negate}) // add the full string as a single token
 			negate = false
 
 			atEnd := i == len(infix)-1
 			if !atEnd && !isExplicitOperator(infix[i+1]) {
 				// only don't add implicit concat if the next character is an explicit operator
-				tokens = append(tokens, CharacterClassToken{".", false, ignoreCase})
+				tokens = append(tokens, characterClassToken{".", false, ignoreCase})
 			}
 
 			s = ""
@@ -197,6 +202,7 @@ func Tokenize(infix string) []interface{} {
 	return tokens
 }
 
+// helper functions to provide meaning to certain characters
 func isExplicitOperator(r uint8) bool {
 	return r == '+' || r == '|' || r == '*' || r == '?'
 }
@@ -209,27 +215,29 @@ func isOpeningBracket(r int32) bool {
 	return r == '(' || r == '['
 }
 
-func InfixToPostfix(infix string) []Token {
+func infixToPostfix(infix string) []token {
 
 	specials := map[string]int{"*": 10, "+": 9, "|": 5, "?": 8, ".": 6}
 
 	postfix := stack.New()
 	tempStack := stack.New()
 
-	tokens := Tokenize(infix)
+	tokens := tokenize(infix) // get the tokens from the infix string
+
+	// apply the shunting yard algorithm to the list of tokens
 	for _, tok := range tokens {
-		val := tok.(Token).Val()
+		val := tok.(token).Val()
 
 		switch {
 		case val == "(":
 			tempStack.Push(tok)
 		case val == ")":
-			for tempStack.Peek().(Token).Val() != "(" {
+			for tempStack.Peek().(token).Val() != "(" {
 				postfix.Push(tempStack.Pop())
 			}
 			tempStack.Pop()
 		case specials[val] > 0:
-			for !IsEmpty(tempStack) && specials[val] <= specials[tempStack.Peek().(Token).Val()] {
+			for !IsEmpty(tempStack) && specials[val] <= specials[tempStack.Peek().(token).Val()] {
 				postfix.Push(tempStack.Pop())
 			}
 			tempStack.Push(tok)
@@ -242,11 +250,12 @@ func InfixToPostfix(infix string) []Token {
 		postfix.Push(tempStack.Pop())
 	}
 
-	var result []Token
+	// the final list of tokens in postfix
+	var result []token
 
 	for !IsEmpty(postfix) {
 		// insert every element at the start of the list.
-		result = append([]Token{postfix.Pop().(Token)}, result...)
+		result = append([]token{postfix.Pop().(token)}, result...)
 	}
 
 	return result
@@ -254,13 +263,13 @@ func InfixToPostfix(infix string) []Token {
 
 // returns all the possible states from the given state, including
 // state transitions with e arrows
-func addState(possibilities []*State, from, to *State) []*State {
+func addState(possibilities []*state, from, to *state) []*state {
 	seen := set.New() // keep track of the states we've already visited
 	states := stack.New()
 	states.Push(from)
 
 	for !IsEmpty(states) { // keep looking until dead end
-		next := states.Pop().(*State)
+		next := states.Pop().(*state)
 
 		if seen.Has(next) { // we may be looking at a state we've already seen
 			continue
@@ -272,7 +281,7 @@ func addState(possibilities []*State, from, to *State) []*State {
 		possibilities = append(possibilities, next) // this is a valid destination
 
 		// e arrow if symbol == nil
-		// zero value for Token is nil
+		// zero value for token is nil
 		if next != to && next.symbol == nil {
 			states.Push(next.edge1)
 			if next.edge2 != nil {
@@ -286,22 +295,22 @@ func addState(possibilities []*State, from, to *State) []*State {
 
 func (n *nfa) Matches(matchString string) bool {
 
-	var current []*State
-	current = addState(current, n.Initial, n.Accept)
-	var next []*State
+	var current []*state
+	current = addState(current, n.initial, n.accept)
+	var next []*state
 
 	for _, r := range matchString {
 		for _, curr := range current {
 			// each token type implements the logic to match the specific character
-			if curr.symbol != nil && curr.symbol.(Token).Matches(r) {
-				next = addState(next[:], curr.edge1, n.Accept)
+			if curr.symbol != nil && curr.symbol.(token).Matches(r) {
+				next = addState(next[:], curr.edge1, n.accept)
 			}
 		}
-		current, next = next, []*State{}
+		current, next = next, []*state{}
 	}
 
 	for _, curr := range current {
-		if curr == n.Accept {
+		if curr == n.accept { // the accept state is found
 			return true
 		}
 	}

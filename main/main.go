@@ -6,7 +6,6 @@ import (
 
 	"../nfa"
 	"fmt"
-	"github.com/fatih/color"
 	"os"
 )
 
@@ -15,13 +14,19 @@ const (
 	OPTIONS  = "options"
 )
 
+// allow scanner to be seen and used as the global user input
 var input *bufio.Scanner
+var finished bool
+
+// init variables before main runs
+func init() {
+	input = bufio.NewScanner(os.Stdin)
+	finished = false
+}
 
 func main() {
-	input = bufio.NewScanner(os.Stdin)
-	finished := false
 	for !finished {
-		printFile(OPTIONS)
+		printFile(OPTIONS, "txt")
 		input.Scan()
 		choice := input.Text()
 
@@ -31,7 +36,7 @@ func main() {
 		case "2":
 			countOption()
 		case "3":
-			printFile(FEATURES)
+			printFile(FEATURES, "txt")
 			fmt.Println()
 			fmt.Println()
 		case "4":
@@ -42,7 +47,6 @@ func main() {
 			fmt.Println("Enter a valid option.")
 			continue
 		}
-
 	}
 }
 
@@ -61,14 +65,14 @@ func matchStringOption() {
 	}
 
 	if result {
-		fmt.Println("The regular expression: " + pattern + color.GreenString(" matched ") + matchString + "!")
+		fmt.Println("The regular expression:", pattern, "matched", matchString+"!")
 	} else {
-		fmt.Println("The regular expression: " + pattern + color.YellowString(" did not match ") + matchString + ".")
+		fmt.Println("The regular expression:", pattern, "did not match", matchString+".")
 	}
 }
 
 func countOption() {
-	fmt.Println("Enter regular expression.")
+	fmt.Print("Enter regular expression: ")
 	input.Scan()
 	pattern := input.Text()
 	fmt.Print("Enter a string to count number of occurrences: ")
@@ -76,11 +80,12 @@ func countOption() {
 	searchString := input.Text()
 	num := nfa.Count(pattern, searchString)
 	numStr := strconv.Itoa(num)
-	fmt.Println("The pattern " + pattern + " occurred " + numStr + " times in the string " + searchString)
+	fmt.Println("The pattern", pattern, "occurred", numStr, "times in the string", searchString)
 }
 
-func printFile(fileName string) {
-	lines := readLines("data/" + fileName + ".txt")
+// helper function to print all the lines in a file
+func printFile(fileName, ext string) {
+	lines := readLines("data/" + fileName + "." + ext)
 	for _, line := range lines {
 		fmt.Println(line)
 	}
